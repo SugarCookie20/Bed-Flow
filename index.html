@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bed-Flow AI — ICU Risk Stratification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --white:       #FFFFFF;
+            --ice:         #F4F8FC;
+            --powder:      #DAE9F5;
+            --powder-mid:  #C0D9EE;
+            --powder-deep: #8AB8D8;
+            --sky:         #4A90C4;
+            --sky-dark:    #2D6B9A;
+            --navy:        #1A3A52;
+            --text-primary:#1A2E3D;
+            --text-mid:    #4A6070;
+            --text-muted:  #7A95A8;
+            --text-hint:   #A8BEC9;
+            --border:      #D5E6F0;
+            --border-mid:  #B8D2E4;
+            --success:     #2E8B6F;
+            --success-bg:  #EBF7F3;
+            --warn:        #B07020;
+            --warn-bg:     #FEF4E6;
+            --danger:      #B03030;
+            --danger-bg:   #FBEAEA;
+            --radius-sm:   4px;
+            --radius:      8px;
+            --radius-lg:   12px;
+            --shadow-sm:   0 1px 3px rgba(26,58,82,0.07);
+            --shadow:      0 2px 8px rgba(26,58,82,0.10);
+            --shadow-md:   0 4px 16px rgba(26,58,82,0.12);
+            --font:        'IBM Plex Sans', sans-serif;
+            --mono:        'IBM Plex Mono', monospace;
+        }
+
+        html, body { height: 100%; background: var(--ice); font-family: var(--font); color: var(--text-primary); font-size: 14px; line-height: 1.5; }
+
+        /* ─── Layout ─── */
+        .layout { display: grid; grid-template-rows: 56px 1fr; min-height: 100vh; }
+
+        /* ─── Top Nav ─── */
+        .topnav {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 28px;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+        .nav-left { display: flex; align-items: center; gap: 16px; }
+        .nav-logo {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 15px; font-weight: 600; color: var(--navy); letter-spacing: -0.01em;
+        }
+        .nav-logo-mark {
+            width: 28px; height: 28px; background: var(--sky); border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .nav-logo-mark svg { width: 16px; height: 16px; }
+        .nav-sep { width: 1px; height: 20px; background: var(--border); }
+        .nav-subtitle { font-size: 12px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.01em; }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .nav-tag {
+            font-size: 11px; font-family: var(--mono); padding: 3px 10px;
+            background: var(--powder); color: var(--sky-dark); border-radius: 20px;
+            letter-spacing: 0.04em; border: 1px solid var(--powder-mid);
+        }
+        .nav-user {
+            width: 30px; height: 30px; background: var(--powder-deep); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 600; color: var(--white);
+        }
+
+        /* ─── Main Content ─── */
+        .main { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 56px); }
+
+        /* ─── Sidebar ─── */
+        .sidebar {
+            background: var(--white);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            display: flex; flex-direction: column; gap: 0;
+        }
+        .sidebar-section-label {
+            font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text-hint); padding: 0 20px 8px;
+        }
+        .sidebar-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 20px; font-size: 13px; color: var(--text-mid);
+            cursor: pointer; border-left: 3px solid transparent;
+            transition: background 0.12s, color 0.12s;
+            text-decoration: none;
+        }
+        .sidebar-item:hover { background: var(--ice); color: var(--text-primary); }
+        .sidebar-item.active {
+            background: var(--powder); color: var(--sky-dark); font-weight: 500;
+            border-left-color: var(--sky);
+        }
+        .sidebar-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.7; }
+        .sidebar-item.active svg { opacity: 1; }
+        .sidebar-divider { height: 1px; background: var(--border); margin: 12px 0; }
+        .sidebar-patient-info {
+            margin: 16px 16px 0; background: var(--ice); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 14px; font-size: 12px;
+        }
+        .patient-name { font-weight: 600; color: var(--text-primary); font-size: 13px; }
+        .patient-meta { color: var(--text-muted); margin-top: 2px; }
+        .patient-id { font-family: var(--mono); font-size: 11px; color: var(--text-hint); margin-top: 4px; }
+        .patient-status { display: flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 11px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
+        .status-dot.high { background: var(--danger); }
+        .status-text { color: var(--text-muted); }
+
+        /* ─── Content Area ─── */
+        .content { padding: 28px; overflow-y: auto; }
+        .content-header {
+            display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;
+        }
+        .content-title { font-size: 18px; font-weight: 600; color: var(--navy); letter-spacing: -0.01em; }
+        .content-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+        .header-actions { display: flex; gap: 10px; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px;
+            font-family: var(--font); font-weight: 500; cursor: pointer; border: none;
+            transition: all 0.12s; white-space: nowrap;
+        }
+        .btn-ghost { background: var(--white); color: var(--text-mid); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: var(--ice); border-color: var(--border-mid); color: var(--text-primary); }
+        .btn-primary { background: var(--sky); color: var(--white); }
+        .btn-primary:hover { background: var(--sky-dark); }
+        .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn svg { width: 14px; height: 14px; }
+
+        /* ─── Card ─── */
+        .card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .card-title { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+        .card-badge {
+            font-size: 10px; font-family: var(--mono); padding: 2px 8px;
+            border-radius: 20px; letter-spacing: 0.04em;
+        }
+        .badge-blue { background: var(--powder); color: var(--sky-dark); border: 1px solid var(--powder-mid); }
+        .badge-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #EDD5A0; }
+        .badge-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid #E8BBBB; }
+        .badge-success { background: var(--success-bg); color: var(--success); border: 1px solid #B0DAC8; }
+
+        /* ─── Grid layouts ─── */
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-input { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .col-span-2 { grid-column: span 2; }
+        .col-span-3 { grid-column: span 3; }
+
+        /* ─── Section ─── */
+        .section { margin-bottom: 20px; }
+
+        /* ─── Tabs ─── */
+        .tab-bar {
+            display: flex; gap: 0; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); overflow: hidden; background: var(--ice);
+            width: fit-content; margin-bottom: 18px;
+        }
+        .tab {
+            padding: 7px 16px; font-size: 12px; font-weight: 500;
+            cursor: pointer; color: var(--text-muted); background: transparent;
+            border: none; font-family: var(--font); transition: all 0.12s;
+            border-right: 1px solid var(--border);
+        }
+        .tab:last-child { border-right: none; }
+        .tab.active { background: var(--white); color: var(--sky-dark); }
+
+        /* ─── Score Entry ─── */
+        .score-boxes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+        .score-box {
+            background: var(--ice); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 14px 16px;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .score-box-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-hint); }
+        .score-box-input {
+            background: transparent; border: none; outline: none;
+            font-family: var(--mono); font-size: 26px; font-weight: 500;
+            color: var(--text-primary); width: 100%;
+        }
+        .score-box-input::placeholder { color: var(--border-mid); }
+        .score-box-range { font-size: 11px; color: var(--text-hint); font-family: var(--mono); }
+        .score-box:focus-within {
+            border-color: var(--sky); background: #F0F7FC;
+        }
+
+        /* ─── Form fields ─── */
+        .field { display: flex; flex-direction: column; gap: 4px; }
+        .field-label { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.02em; }
+        .field-input, .field-select {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 8px 10px;
+            font-family: var(--font); font-size: 13px; color: var(--text-primary);
+            outline: none; width: 100%; transition: border 0.12s;
+            appearance: none;
+        }
+        .field-input:focus, .field-select:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(74,144,196,0.12); }
+
+        /* ─── Textarea ─── */
+        .note-textarea {
+            width: 100%; min-height: 130px; resize: vertical;
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 12px 14px;
+            font-family: var(--mono); font-size: 12px; color: var(--text-primary);
+            line-height: 1.7; outline: none; transition: border 0.12s;
+        }
+        .note-textarea:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(74,144,196,0.12); }
+        .note-textarea::placeholder { color: var(--text-hint); }
+
+        /* ─── Computed score chips ─── */
+        .computed-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+        .computed-chip {
+            background: var(--powder); border: 1px solid var(--powder-mid);
+            border-radius: var(--radius-sm); padding: 8px 12px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .computed-chip-label { font-size: 11px; color: var(--sky-dark); font-weight: 500; }
+        .computed-chip-val { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--navy); }
+
+        /* ─── Output area ─── */
+        .output-grid { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+
+        /* ─── Gauge ─── */
+        .gauge-container { text-align: center; padding: 12px 0 8px; }
+        .gauge-svg { width: 220px; height: 130px; overflow: visible; }
+        .gauge-score { font-family: var(--mono); font-size: 40px; font-weight: 500; margin-top: -4px; line-height: 1; }
+        .gauge-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+
+        /* ─── Breakdown bars ─── */
+        .breakdown-list { display: flex; flex-direction: column; gap: 10px; }
+        .breakdown-item { display: grid; grid-template-columns: 72px 1fr 48px; align-items: center; gap: 10px; }
+        .breakdown-name { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+        .bar-track { height: 5px; background: var(--ice); border-radius: 3px; border: 1px solid var(--border); overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 3px; transition: width 0.7s cubic-bezier(.4,0,.2,1); }
+        .breakdown-val { font-family: var(--mono); font-size: 12px; text-align: right; font-weight: 500; }
+
+        /* ─── Narrative ─── */
+        .narrative-block {
+            background: var(--ice); border: 1px solid var(--border);
+            border-left: 3px solid var(--sky); border-radius: var(--radius);
+            padding: 14px 16px;
+        }
+        .narrative-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sky); margin-bottom: 6px; }
+        .narrative-text { font-size: 13px; color: var(--text-mid); line-height: 1.7; }
+
+        /* ─── Flags ─── */
+        .flag {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 10px 14px; border-radius: var(--radius-sm);
+            font-size: 12px; border: 1px solid;
+            margin-bottom: 8px;
+        }
+        .flag:last-child { margin-bottom: 0; }
+        .flag-high { background: var(--danger-bg); color: var(--danger); border-color: #E8BBBB; }
+        .flag-mod  { background: var(--warn-bg);   color: var(--warn);   border-color: #EDD5A0; }
+        .flag-low  { background: var(--success-bg);color: var(--success);border-color: #B0DAC8; }
+        .flag-icon { flex-shrink: 0; margin-top: 1px; }
+        .flag-icon svg { width: 13px; height: 13px; }
+
+        /* ─── Empty / Loading ─── */
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 320px; color: var(--text-hint); text-align: center; gap: 10px;
+        }
+        .empty-icon { opacity: 0.25; }
+        .empty-icon svg { width: 40px; height: 40px; }
+        .empty-text { font-size: 13px; max-width: 220px; line-height: 1.6; }
+        .loading-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 320px; gap: 14px;
+        }
+        .spinner {
+            width: 26px; height: 26px; border: 2px solid var(--border);
+            border-top-color: var(--sky); border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 12px; color: var(--text-muted); font-family: var(--mono); }
+
+        /* ─── Divider ─── */
+        .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+        /* ─── Footer ─── */
+        .app-footer {
+            background: var(--white); border-top: 1px solid var(--border);
+            padding: 10px 28px; display: flex; align-items: center; justify-content: space-between;
+            font-size: 11px; color: var(--text-hint);
+        }
+        .footer-left { display: flex; align-items: center; gap: 16px; }
+        .footer-warn { display: flex; align-items: center; gap: 5px; color: var(--warn); }
+        .footer-warn svg { width: 12px; height: 12px; }
+
+        /* ─── Misc ─── */
+        .link-btn {
+            background: none; border: none; font-family: var(--font); font-size: 12px;
+            color: var(--sky); cursor: pointer; text-decoration: underline; padding: 0;
+        }
+        .link-btn:hover { color: var(--sky-dark); }
+        .section-title {
+            font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--text-muted); margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .subsection-bar { width: 3px; height: 12px; background: var(--sky); border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: middle; }
+        .note-meta { font-size: 11px; color: var(--text-hint); margin-top: 6px; display: flex; align-items: center; justify-content: space-between; }
+        .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .breadcrumb span { color: var(--text-hint); }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- Top Nav -->
+    <nav class="topnav">
+        <div class="nav-left">
+            <div class="nav-logo">
+                <div class="nav-logo-mark">
+                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="7" width="12" height="1.5" rx="0.75" fill="white"/>
+                        <rect x="7.25" y="2" width="1.5" height="12" rx="0.75" fill="white"/>
+                    </svg>
+                </div>
+                Bed-Flow AI
+            </div>
+            <div class="nav-sep"></div>
+            <div class="nav-subtitle">ICU Clinical Decision Support</div>
+        </div>
+        <div class="nav-right">
+            <div class="nav-tag">PROTOTYPE · MIMIC-III</div>
+            <div class="nav-tag">Ward 4B · ICU</div>
+            <div class="nav-user">JR</div>
+        </div>
+    </nav>
+
+    <div class="main">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div style="padding: 0 0 8px;">
+                <div class="sidebar-section-label">Navigation</div>
+                <a class="sidebar-item active" href="#">
+                    <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+                    Risk Assessment
+                </a>
+                <a class="sidebar-item" href="#">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+                    Patient List
+                </a>
+                <a class="sidebar-item" href="#">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+                    Score History
+                </a>
+                <a class="sidebar-item" href="#">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l1.5 3h3.5l-2.8 2 1 3L8 8.5 4.8 10l1-3L3 5h3.5z"/></svg>
+                    Analytics
+                </a>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div>
+                <div class="sidebar-section-label">Current Patient</div>
+            </div>
+
+            <div class="sidebar-patient-info">
+                <div class="patient-name">Anon. Patient #0042</div>
+                <div class="patient-meta">M · 67 y · Adm. Emergency</div>
+                <div class="patient-id">MIMIC-III · stay_id: 394821</div>
+                <div class="patient-status">
+                    <div class="status-dot high"></div>
+                    <div class="status-text">High risk — under review</div>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div>
+                <div class="sidebar-section-label" style="margin-top:0;">Reference</div>
+                <a class="sidebar-item" href="#" style="font-size:12px;">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 7v5M8 5v1"/></svg>
+                    SOFA / APACHE II guide
+                </a>
+                <a class="sidebar-item" href="#" style="font-size:12px;">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h8M4 8h6M4 12h4"/><rect x="1" y="1" width="14" height="14" rx="2"/></svg>
+                    TRIPOD+AI report
+                </a>
+            </div>
+        </aside>
+
+        <!-- Content -->
+        <div style="display:flex;flex-direction:column;min-height:calc(100vh - 56px);">
+            <div class="content" style="flex:1;">
+
+                <div class="breadcrumb">
+                    Ward 4B — ICU <span>›</span> Risk Assessment <span>›</span> New Analysis
+                </div>
+
+                <div class="content-header">
+                    <div>
+                        <div class="content-title">Cumulative Risk Assessment</div>
+                        <div class="content-subtitle">Hybrid severity scoring · SOFA · APACHE II · SAPS II · LLM signal from nursing notes</div>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-ghost" onclick="resetAll()">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 8A5.5 5.5 0 1 1 8 2.5c1.5 0 2.9.6 3.9 1.6L14 6"/><path d="M14 2v4h-4"/></svg>
+                            Reset
+                        </button>
+                        <button class="btn btn-ghost" id="demo-btn" onclick="loadDemo()">
+                            Load demo
+                        </button>
+                        <button class="btn btn-primary" id="analyze-btn" onclick="runAnalysis()">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+                            Analyse risk
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input + Output -->
+                <div class="grid-2" style="gap:20px; align-items:start;">
+
+                    <!-- Input Column -->
+                    <div style="display:flex;flex-direction:column;gap:16px;">
+
+                        <!-- Severity Score Entry -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Severity Scores</div>
+                                <div class="card-badge badge-blue">Module A</div>
+                            </div>
+
+                            <div class="tab-bar">
+                                <button class="tab active" onclick="switchMode('direct', this)">Direct entry</button>
+                                <button class="tab" onclick="switchMode('component', this)">Component entry</button>
+                            </div>
+
+                            <!-- Direct mode -->
+                            <div id="mode-direct">
+                                <div class="score-boxes">
+                                    <div class="score-box">
+                                        <div class="score-box-label">SOFA</div>
+                                        <input class="score-box-input" type="number" id="sofa-d" placeholder="—" min="0" max="24">
+                                        <div class="score-box-range">0 – 24</div>
+                                    </div>
+                                    <div class="score-box">
+                                        <div class="score-box-label">APACHE II</div>
+                                        <input class="score-box-input" type="number" id="apache-d" placeholder="—" min="0" max="71">
+                                        <div class="score-box-range">0 – 71</div>
+                                    </div>
+                                    <div class="score-box">
+                                        <div class="score-box-label">SAPS II</div>
+                                        <input class="score-box-input" type="number" id="saps-d" placeholder="—" min="0" max="163">
+                                        <div class="score-box-range">0 – 163</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Component mode -->
+                            <div id="mode-component" style="display:none;">
+                                <div class="section-title">Respiratory</div>
+                                <div class="grid-input">
+                                    <div class="field"><div class="field-label">PaO₂/FiO₂ ratio</div><input class="field-input" type="number" id="pf" placeholder="e.g. 280"></div>
+                                    <div class="field"><div class="field-label">Mechanically ventilated</div>
+                                        <select class="field-select" id="vent"><option value="0">No</option><option value="1">Yes</option></select>
+                                    </div>
+                                </div>
+                                <div class="section-title" style="margin-top:14px;">Cardiovascular</div>
+                                <div class="grid-input">
+                                    <div class="field"><div class="field-label">MAP (mmHg)</div><input class="field-input" type="number" id="map-v" placeholder="e.g. 65"></div>
+                                    <div class="field"><div class="field-label">Vasopressors</div>
+                                        <select class="field-select" id="vasop">
+                                            <option value="0">None</option>
+                                            <option value="1">Low-dose dopamine</option>
+                                            <option value="2">High-dose dopa / norepi</option>
+                                            <option value="3">Epi / norepi &gt;0.1 μg/kg/min</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="section-title" style="margin-top:14px;">Neurological &amp; Renal</div>
+                                <div class="grid-input">
+                                    <div class="field"><div class="field-label">GCS total</div><input class="field-input" type="number" id="gcs-v" placeholder="3 – 15" min="3" max="15"></div>
+                                    <div class="field"><div class="field-label">Creatinine (mg/dL)</div><input class="field-input" type="number" id="cr-v" placeholder="e.g. 1.2"></div>
+                                    <div class="field"><div class="field-label">Platelets (×10³/μL)</div><input class="field-input" type="number" id="plt-v" placeholder="e.g. 150"></div>
+                                    <div class="field"><div class="field-label">Bilirubin (mg/dL)</div><input class="field-input" type="number" id="bili-v" placeholder="e.g. 0.8"></div>
+                                </div>
+                                <button class="btn btn-ghost" style="margin-top:14px;font-size:12px;" onclick="computeComponents()">Compute scores</button>
+                                <div class="computed-row" id="computed-row">
+                                    <div class="computed-chip"><span class="computed-chip-label">SOFA</span><span class="computed-chip-val" id="sofa-c">—</span></div>
+                                    <div class="computed-chip"><span class="computed-chip-label">APACHE II</span><span class="computed-chip-val" id="apache-c">—</span></div>
+                                    <div class="computed-chip"><span class="computed-chip-label">SAPS II</span><span class="computed-chip-val" id="saps-c">—</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nursing Notes -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Nursing Notes</div>
+                                <div class="card-badge badge-blue">Module B</div>
+                            </div>
+                            <textarea class="note-textarea" id="notes-input" placeholder="Paste nursing notes here (single or multi-shift, first 24–48 h of ICU stay)..."></textarea>
+                            <div class="note-meta">
+                                <span>De-identified · Processed locally via MedGemma 7B endpoint</span>
+                                <button class="link-btn" onclick="loadDemoNote()">Load sample note</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Output Column -->
+                    <div class="card" style="min-height:520px;">
+                        <div class="card-header">
+                            <div class="card-title">Risk Output</div>
+                            <div id="output-badge" style="display:none;" class="card-badge badge-warn">Awaiting analysis</div>
+                        </div>
+
+                        <div id="empty-state" class="empty-state">
+                            <div class="empty-icon">
+                                <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="20" cy="20" r="17"/>
+                                    <path d="M20 12v8M20 24v2"/>
+                                </svg>
+                            </div>
+                            <div class="empty-text">Enter severity scores and nursing notes, then click Analyse risk to generate the cumulative assessment.</div>
+                        </div>
+
+                        <div id="loading-state" class="loading-state" style="display:none;">
+                            <div class="spinner"></div>
+                            <div class="loading-text" id="loading-msg">Parsing nursing notes...</div>
+                        </div>
+
+                        <div id="result-state" style="display:none;">
+
+                            <!-- Gauge + Score -->
+                            <div class="gauge-container">
+                                <svg class="gauge-svg" viewBox="0 0 220 130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Risk gauge showing cumulative ICU risk score">
+                                    <defs>
+                                        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stop-color="#2E8B6F"/>
+                                            <stop offset="45%" stop-color="#B07020"/>
+                                            <stop offset="100%" stop-color="#B03030"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M20 115 A90 90 0 0 1 200 115" fill="none" stroke="#DAE9F5" stroke-width="10" stroke-linecap="round"/>
+                                    <path id="gauge-arc" d="M20 115 A90 90 0 0 1 200 115" fill="none" stroke="url(#gaugeGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="283" style="transition:stroke-dashoffset 0.8s cubic-bezier(.4,0,.2,1)"/>
+                                    <line id="gauge-needle" x1="110" y1="115" x2="110" y2="36" stroke="#1A3A52" stroke-width="2" stroke-linecap="round" transform="rotate(-90 110 115)" style="transition:transform 0.8s cubic-bezier(.4,0,.2,1)"/>
+                                    <circle cx="110" cy="115" r="5" fill="#1A3A52"/>
+                                    <text x="18" y="128" font-family="IBM Plex Mono,monospace" font-size="9" fill="#A8BEC9">0</text>
+                                    <text x="105" y="22" font-family="IBM Plex Mono,monospace" font-size="9" fill="#A8BEC9" text-anchor="middle">5</text>
+                                    <text x="200" y="128" font-family="IBM Plex Mono,monospace" font-size="9" fill="#A8BEC9" text-anchor="end">10</text>
+                                </svg>
+                                <div class="gauge-score" id="gauge-score">—</div>
+                                <div class="gauge-label" id="gauge-label" style="color:var(--text-muted);">—</div>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <!-- Breakdown -->
+                            <div style="margin-bottom:20px;">
+                                <div class="section-title">Score contributions</div>
+                                <div class="breakdown-list" id="breakdown-list"></div>
+                            </div>
+
+                            <!-- Narrative -->
+                            <div style="margin-bottom:20px;">
+                                <div class="section-title">LLM risk narrative</div>
+                                <div class="narrative-block">
+                                    <div class="narrative-eyebrow">MedGemma · Chain-of-thought analysis</div>
+                                    <div class="narrative-text" id="narrative-text">—</div>
+                                </div>
+                            </div>
+
+                            <!-- Flags -->
+                            <div>
+                                <div class="section-title">Clinical action flags</div>
+                                <div id="flags-container"></div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div><!-- /grid-2 -->
+
+            </div><!-- /content -->
+
+            <!-- Footer -->
+            <div class="app-footer">
+                <div class="footer-left">
+                    <div class="footer-warn">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L14 13H2L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>
+                        Decision support only — clinical judgement supersedes all outputs
+                    </div>
+                    <span>·</span>
+                    <span>MIMIC-III · PhysioNet Data Use Agreement</span>
+                    <span>·</span>
+                    <span>TRIPOD+AI compliant reporting</span>
+                </div>
+                <div>Bed-Flow AI v0.1 · Prototype</div>
+            </div>
+        </div><!-- /flex column -->
+
+    </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+    let mode = 'direct';
+    let computedScores = { sofa: null, apache: null, saps: null };
+
+    function switchMode(m, el) {
+        mode = m;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('mode-direct').style.display = m === 'direct' ? '' : 'none';
+        document.getElementById('mode-component').style.display = m === 'component' ? '' : 'none';
+    }
+
+    function loadDemoNote() {
+        document.getElementById('notes-input').value =
+            `0400 — Pt remains on SIMV, FiO2 0.55, PEEP 10. SpO2 92% on current settings. Difficult to wean below FiO2 0.50 without desaturation. Norepinephrine 0.12 mcg/kg/min — increasing pressors overnight from 0.08. MAP 62–65 throughout shift. Urine output 18 mL/hr ×4h — notable decline from previous shift (32 mL/hr). Creatinine trending up per AM labs.
+
+0800 — Patient increasingly agitated, attempting to pull at ETT. Fentanyl and midazolam infusions titrated up. GCS 8T. Family at bedside, distressed. Charge nurse notified. Bilateral lung crackles on auscultation, CXR ordered. Pressure injury risk score elevated.
+
+1200 — Vasopressor requirement persists. Renal consult placed given worsening creatinine (2.4 from 1.8 yesterday). Fever 38.9°C, blood cultures ×2 sent. Lactate 3.1 mmol/L. Physician notified and at bedside.`;
+    }
+
+    function loadDemo() {
+        document.getElementById('sofa-d').value = 11;
+        document.getElementById('apache-d').value = 28;
+        document.getElementById('saps-d').value = 54;
+        loadDemoNote();
+    }
+
+    function resetAll() {
+        ['sofa-d','apache-d','saps-d','pf','map-v','gcs-v','cr-v','plt-v','bili-v'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        document.getElementById('notes-input').value = '';
+        document.getElementById('empty-state').style.display = 'flex';
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('result-state').style.display = 'none';
+        document.getElementById('output-badge').style.display = 'none';
+        computedScores = { sofa: null, apache: null, saps: null };
+        document.getElementById('sofa-c').textContent = '—';
+        document.getElementById('apache-c').textContent = '—';
+        document.getElementById('saps-c').textContent = '—';
+    }
+
+    /* ─── SOFA computation ─── */
+    function sofaResp(pf, v) { if(pf>=400)return 0; if(pf>=300)return 1; if(pf>=200)return 2; if(pf>=100)return v?3:2; return v?4:2; }
+    function sofaCoag(p) { if(p>=150)return 0; if(p>=100)return 1; if(p>=50)return 2; if(p>=20)return 3; return 4; }
+    function sofaLiver(b) { if(b<1.2)return 0; if(b<=1.9)return 1; if(b<=5.9)return 2; if(b<=11.9)return 3; return 4; }
+    function sofaCardio(map, vp) { if(vp>=3)return 4; if(vp===2)return 3; if(vp===1)return 2; if(map<70)return 1; return 0; }
+    function sofaNeuro(g) { if(g>=15)return 0; if(g>=13)return 1; if(g>=10)return 2; if(g>=6)return 3; return 4; }
+    function sofaRenal(c) { if(c<1.2)return 0; if(c<=1.9)return 1; if(c<=3.4)return 2; if(c<=4.9)return 3; return 4; }
+
+    function computeComponents() {
+        const pf = parseFloat(document.getElementById('pf').value) || 400;
+        const v  = parseInt(document.getElementById('vent').value);
+        const map = parseFloat(document.getElementById('map-v').value) || 70;
+        const vp = parseInt(document.getElementById('vasop').value);
+        const gcs = parseInt(document.getElementById('gcs-v').value) || 15;
+        const cr = parseFloat(document.getElementById('cr-v').value) || 1.0;
+        const plt = parseFloat(document.getElementById('plt-v').value) || 200;
+        const bili = parseFloat(document.getElementById('bili-v').value) || 0.8;
+        const sofa = sofaResp(pf,v)+sofaCoag(plt)+sofaLiver(bili)+sofaCardio(map,vp)+sofaNeuro(gcs)+sofaRenal(cr);
+        const apache = Math.min(71, Math.round(sofa*1.9+(gcs<10?5:0)+(cr>2?4:0)));
+        const saps = Math.min(163, Math.round(sofa*5.2+(v?8:0)));
+        computedScores = { sofa, apache, saps };
+        document.getElementById('sofa-c').textContent = sofa;
+        document.getElementById('apache-c').textContent = apache;
+        document.getElementById('saps-c').textContent = saps;
+    }
+
+    function getScores() {
+        if (mode === 'direct') return {
+            sofa:   parseFloat(document.getElementById('sofa-d').value)   || null,
+            apache: parseFloat(document.getElementById('apache-d').value) || null,
+            saps:   parseFloat(document.getElementById('saps-d').value)   || null
+        };
+        return computedScores;
+    }
+
+    function norm(v, lo, hi) { return Math.max(0, Math.min(1, (v-lo)/(hi-lo))); }
+
+    const loadMsgs = ['Parsing nursing notes...','Running LLM risk analysis...','Computing cumulative score...','Generating action flags...'];
+
+    async function runAnalysis() {
+        const scores = getScores();
+        const notes = document.getElementById('notes-input').value.trim();
+        const btn = document.getElementById('analyze-btn');
+        btn.disabled = true;
+
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('result-state').style.display = 'none';
+        document.getElementById('loading-state').style.display = 'flex';
+        document.getElementById('output-badge').style.display = '';
+        document.getElementById('output-badge').textContent = 'Analysing...';
+        document.getElementById('output-badge').className = 'card-badge badge-blue';
+
+        let mi = 0;
+        const msgEl = document.getElementById('loading-msg');
+        msgEl.textContent = loadMsgs[0];
+        const t = setInterval(() => { mi=(mi+1)%loadMsgs.length; msgEl.textContent = loadMsgs[mi]; }, 1600);
+
+        const prompt = `You are a clinical AI assistant embedded in Bed-Flow AI, an ICU risk stratification prototype.
+
+Patient severity scores (first 24 h):
+- SOFA: ${scores.sofa ?? 'not provided'} / 24
+- APACHE II: ${scores.apache ?? 'not provided'} / 71
+- SAPS II: ${scores.saps ?? 'not provided'} / 163
+
+Nursing notes:
+"""
+${notes || 'No notes provided.'}
+"""
+
+Instructions:
+1. Analyse the notes for: haemodynamic instability, respiratory compromise, altered consciousness, organ dysfunction, clinical trajectory (improving/stable/deteriorating), and high-risk language markers (e.g. "increasing pressors", "difficult to wean", "agitated", "declining urine output", lactate elevation, fever, culture data).
+2. Assign llm_score: 0.0–10.0 (one decimal). 0–3 = low, 4–6 = moderate, 7–10 = high.
+3. Write a clinical narrative (2–3 sentences) summarising key risk drivers.
+4. Generate 2–4 action flags. Format: SEVERITY|Flag text where SEVERITY is HIGH, MODERATE, or LOW.
+
+Return ONLY this JSON, no markdown, no preamble:
+{"llm_score":<number>,"narrative":"<string>","flags":["SEVERITY|text"]}`;
+
+        try {
+            const res = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 1000,
+                    system: 'Respond only with valid JSON. No markdown, no extra text.',
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+            const data = await res.json();
+            const raw = data.content.map(b => b.text||'').join('').replace(/```json|```/g,'').trim();
+            const parsed = JSON.parse(raw);
+            clearInterval(t);
+            renderResult(scores, parsed);
+        } catch(e) {
+            clearInterval(t);
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'flex';
+            document.getElementById('empty-state').querySelector('.empty-text').textContent = 'Analysis failed. Please check inputs and try again.';
+            document.getElementById('output-badge').style.display = 'none';
+        }
+        btn.disabled = false;
+    }
+
+    function renderResult(scores, llm) {
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('result-state').style.display = 'block';
+
+        const llmScore = Math.min(10, Math.max(0, parseFloat(llm.llm_score)));
+        const sofaN  = scores.sofa   != null ? norm(scores.sofa,   0,  24) * 10 : null;
+        const apN    = scores.apache != null ? norm(scores.apache,  0,  71) * 10 : null;
+        const sapsN  = scores.saps   != null ? norm(scores.saps,    0, 163) * 10 : null;
+
+        let cum = llmScore * 0.25, wt = 0.25;
+        if (sofaN  != null) { cum += sofaN  * 0.25; wt += 0.25; }
+        if (apN    != null) { cum += apN    * 0.25; wt += 0.25; }
+        if (sapsN  != null) { cum += sapsN  * 0.25; wt += 0.25; }
+        const final = parseFloat((cum / wt * (wt > 0 ? 1 : 1)).toFixed(1));
+
+        const color = final <= 3 ? '#2E8B6F' : final <= 6 ? '#B07020' : '#B03030';
+        const label = final <= 3 ? 'Low Risk' : final <= 6 ? 'Moderate Risk' : 'High Risk';
+        const badgeClass = final <= 3 ? 'badge-success' : final <= 6 ? 'badge-warn' : 'badge-danger';
+
+        document.getElementById('gauge-score').textContent = final.toFixed(1);
+        document.getElementById('gauge-score').style.color = color;
+        document.getElementById('gauge-label').textContent = label;
+        document.getElementById('gauge-label').style.color = color;
+        document.getElementById('output-badge').textContent = label;
+        document.getElementById('output-badge').className = `card-badge ${badgeClass}`;
+
+        const arc = document.getElementById('gauge-arc');
+        arc.style.strokeDashoffset = 283 - (final / 10) * 283;
+        document.getElementById('gauge-needle').setAttribute('transform', `rotate(${-90 + (final/10)*180} 110 115)`);
+
+        const breakdownData = [
+            { name: 'SOFA',      val: sofaN,    raw: scores.sofa },
+            { name: 'APACHE II', val: apN,      raw: scores.apache },
+            { name: 'SAPS II',   val: sapsN,    raw: scores.saps },
+            { name: 'LLM signal',val: llmScore, raw: null }
+        ];
+        document.getElementById('breakdown-list').innerHTML = breakdownData
+            .filter(b => b.val != null)
+            .map(b => `
+        <div class="breakdown-item">
+          <div class="breakdown-name">${b.name}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(b.val/10)*100}%;background:${color};"></div></div>
+          <div class="breakdown-val" style="color:${color};">${b.val.toFixed(1)}</div>
+        </div>`).join('');
+
+        document.getElementById('narrative-text').textContent = llm.narrative || 'No narrative generated.';
+
+        const flagIcons = {
+            HIGH:     `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M8 2L14 13H2L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>`,
+            MODERATE: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><circle cx="8" cy="8" r="6"/><path d="M8 7v3M8 5v1"/></svg>`,
+            LOW:      `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M3 8h10M9 4l4 4-4 4"/></svg>`
+        };
+        document.getElementById('flags-container').innerHTML = (llm.flags || []).map(f => {
+            const [sev, ...rest] = f.split('|');
+            const cls = sev==='HIGH' ? 'flag-high' : sev==='MODERATE' ? 'flag-mod' : 'flag-low';
+            return `<div class="flag ${cls}">
+        <span class="flag-icon">${flagIcons[sev]||''}</span>
+        <span>${rest.join('|')}</span>
+      </div>`;
+        }).join('') || '<div style="font-size:12px;color:var(--text-hint);">No flags generated.</div>';
+    }
+</script>
+</body>
+</html>
