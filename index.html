@@ -5,42 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bed-Flow AI — ICU Risk Stratification</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
             --white:       #FFFFFF;
-            --ice:         #F4F8FC;
-            --powder:      #DAE9F5;
-            --powder-mid:  #C0D9EE;
-            --powder-deep: #8AB8D8;
-            --sky:         #4A90C4;
-            --sky-dark:    #2D6B9A;
-            --navy:        #1A3A52;
-            --text-primary:#1A2E3D;
-            --text-mid:    #4A6070;
-            --text-muted:  #7A95A8;
-            --text-hint:   #A8BEC9;
-            --border:      #D5E6F0;
-            --border-mid:  #B8D2E4;
-            --success:     #2E8B6F;
-            --success-bg:  #EBF7F3;
-            --warn:        #B07020;
-            --warn-bg:     #FEF4E6;
-            --danger:      #B03030;
-            --danger-bg:   #FBEAEA;
-            --radius-sm:   4px;
-            --radius:      8px;
-            --radius-lg:   12px;
-            --shadow-sm:   0 1px 3px rgba(26,58,82,0.07);
-            --shadow:      0 2px 8px rgba(26,58,82,0.10);
-            --shadow-md:   0 4px 16px rgba(26,58,82,0.12);
-            --font:        'IBM Plex Sans', sans-serif;
-            --mono:        'IBM Plex Mono', monospace;
+            --ice:         #F8FBFF;
+            --powder:      #DDEEFF;
+            --powder-mid:  #B0D0E8;
+            --powder-deep: #6A9DBF;
+            --sky:         #4A8FB8;
+            --sky-dark:    #2A6A90;
+            --navy:        #1A4060;
+            --text-primary:#1A4060;
+            --text-mid:    #2E5A7A;
+            --text-muted:  #5E86A0;
+            --text-hint:   #9ABCCE;
+            --border:      #D6EAFA;
+            --border-mid:  #B8D6EE;
+            --success:     #2A7A5E;
+            --success-bg:  #EBF5F1;
+            --warn:        #8A5A10;
+            --warn-bg:     #FBF2E4;
+            --danger:      #9E2B2B;
+            --danger-bg:   #F9EAEA;
+            --radius-sm:   3px;
+            --radius:      6px;
+            --radius-lg:   8px;
+            --shadow-sm:   0 1px 2px rgba(27,38,64,0.06);
+            --shadow:      0 2px 6px rgba(27,38,64,0.09);
+            --shadow-md:   0 4px 14px rgba(27,38,64,0.11);
+            --font:        'DM Sans', sans-serif;
+            --mono:        'DM Mono', monospace;
         }
 
-        html, body { height: 100%; background: var(--ice); font-family: var(--font); color: var(--text-primary); font-size: 14px; line-height: 1.5; }
+        html, body { height: 100%; background: var(--ice); font-family: var(--font); color: var(--text-primary); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
 
         /* ─── Layout ─── */
         .layout { display: grid; grid-template-rows: 56px 1fr; min-height: 100vh; }
@@ -357,19 +357,19 @@
         <aside class="sidebar">
             <div style="padding: 0 0 8px;">
                 <div class="sidebar-section-label">Navigation</div>
-                <a class="sidebar-item active" href="#">
+                <a class="sidebar-item active" href="#/risk-assessment" onclick="navigate(event, '/risk-assessment')">
                     <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
                     Risk Assessment
                 </a>
-                <a class="sidebar-item" href="#">
+                <a class="sidebar-item" href="#/patient-list" onclick="navigate(event, '/patient-list')">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
                     Patient List
                 </a>
-                <a class="sidebar-item" href="#">
+                <a class="sidebar-item" href="#/score-history" onclick="navigate(event, '/score-history')">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
                     Score History
                 </a>
-                <a class="sidebar-item" href="#">
+                <a class="sidebar-item" href="#/analytics" onclick="navigate(event, '/analytics')">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l1.5 3h3.5l-2.8 2 1 3L8 8.5 4.8 10l1-3L3 5h3.5z"/></svg>
                     Analytics
                 </a>
@@ -408,11 +408,13 @@
 
         <!-- Content -->
         <div style="display:flex;flex-direction:column;min-height:calc(100vh - 56px);">
-            <div class="content" style="flex:1;">
+            <div class="content" style="flex:1;" id="app-content">
 
-                <div class="breadcrumb">
-                    Ward 4B — ICU <span>›</span> Risk Assessment <span>›</span> New Analysis
-                </div>
+                <!-- Page: Risk Assessment -->
+                <div id="page-risk-assessment" class="page-container" style="display:block;">
+                    <div class="breadcrumb">
+                        Ward 4B — ICU <span>›</span> Risk Assessment <span>›</span> New Analysis
+                    </div>
 
                 <div class="content-header">
                     <div>
@@ -554,18 +556,18 @@
                                 <svg class="gauge-svg" viewBox="0 0 220 130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Risk gauge showing cumulative ICU risk score">
                                     <defs>
                                         <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="0%" stop-color="#2E8B6F"/>
-                                            <stop offset="45%" stop-color="#B07020"/>
-                                            <stop offset="100%" stop-color="#B03030"/>
+                                            <stop offset="0%" stop-color="#2A7A5E"/>
+                                            <stop offset="45%" stop-color="#8A5A10"/>
+                                            <stop offset="100%" stop-color="#9E2B2B"/>
                                         </linearGradient>
                                     </defs>
-                                    <path d="M20 115 A90 90 0 0 1 200 115" fill="none" stroke="#DAE9F5" stroke-width="10" stroke-linecap="round"/>
+                                    <path d="M20 115 A90 90 0 0 1 200 115" fill="none" stroke="#DDEEFF" stroke-width="10" stroke-linecap="round"/>
                                     <path id="gauge-arc" d="M20 115 A90 90 0 0 1 200 115" fill="none" stroke="url(#gaugeGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="283" style="transition:stroke-dashoffset 0.8s cubic-bezier(.4,0,.2,1)"/>
-                                    <line id="gauge-needle" x1="110" y1="115" x2="110" y2="36" stroke="#1A3A52" stroke-width="2" stroke-linecap="round" transform="rotate(-90 110 115)" style="transition:transform 0.8s cubic-bezier(.4,0,.2,1)"/>
-                                    <circle cx="110" cy="115" r="5" fill="#1A3A52"/>
-                                    <text x="18" y="128" font-family="IBM Plex Mono,monospace" font-size="9" fill="#A8BEC9">0</text>
-                                    <text x="105" y="22" font-family="IBM Plex Mono,monospace" font-size="9" fill="#A8BEC9" text-anchor="middle">5</text>
-                                    <text x="200" y="128" font-family="IBM Plex Mono,monospace" font-size="9" fill="#A8BEC9" text-anchor="end">10</text>
+                                    <line id="gauge-needle" x1="110" y1="115" x2="110" y2="36" stroke="#1A4060" stroke-width="2" stroke-linecap="round" transform="rotate(-90 110 115)" style="transition:transform 0.8s cubic-bezier(.4,0,.2,1)"/>
+                                    <circle cx="110" cy="115" r="5" fill="#1A4060"/>
+                                    <text x="18" y="128" font-family="DM Mono,monospace" font-size="9" fill="#9ABCCE">0</text>
+                                    <text x="105" y="22" font-family="DM Mono,monospace" font-size="9" fill="#9ABCCE" text-anchor="middle">5</text>
+                                    <text x="200" y="128" font-family="DM Mono,monospace" font-size="9" fill="#9ABCCE" text-anchor="end">10</text>
                                 </svg>
                                 <div class="gauge-score" id="gauge-score">—</div>
                                 <div class="gauge-label" id="gauge-label" style="color:var(--text-muted);">—</div>
@@ -598,6 +600,191 @@
                     </div>
 
                 </div><!-- /grid-2 -->
+                </div><!-- /page-risk-assessment -->
+
+                <!-- Page: Patient List -->
+                <div id="page-patient-list" class="page-container" style="display:none;">
+                    <div class="breadcrumb">
+                        Ward 4B — ICU <span>›</span> Patient List
+                    </div>
+                    <div class="content-header">
+                        <div>
+                            <div class="content-title">Current Patients</div>
+                            <div class="content-subtitle">Real-time risk stratification across active admissions</div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-ghost" onclick="sortPatients('name', this)">
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+                                Sort by name
+                            </button>
+                            <button class="btn btn-primary" onclick="refreshPatients()">
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 8A5.5 5.5 0 1 1 8 2.5c1.5 0 2.9.6 3.9 1.6L14 6"/><path d="M14 2v4h-4"/></svg>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="patient-list-table">
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead>
+                                <tr style="border-bottom:2px solid var(--border);height:40px;">
+                                    <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;">Name</th>
+                                    <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;">Admit</th>
+                                    <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;">Age</th>
+                                    <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;">Severity</th>
+                                    <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;">Risk</th>
+                                    <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patient-list-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div><!-- /page-patient-list -->
+
+                <!-- Page: Score History -->
+                <div id="page-score-history" class="page-container" style="display:none;">
+                    <div class="breadcrumb">
+                        Ward 4B — ICU <span>›</span> Score History
+                    </div>
+                    <div class="content-header">
+                        <div>
+                            <div class="content-title">Historical Risk Scores</div>
+                            <div class="content-subtitle">Longitudinal severity tracking for current patient</div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-ghost" onclick="setTimeRange('7d', this)">
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+                                Last 7 days
+                            </button>
+                            <button class="btn btn-ghost" onclick="setTimeRange('30d', this)">
+                                30 days
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr;gap:16px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Score Timeline</div>
+                            </div>
+                            <div id="history-chart" style="height:300px;background:var(--ice);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--text-hint);font-size:12px;">
+                                <div>Score trend visualization</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Recent Assessments</div>
+                            </div>
+                            <div id="history-list" style="display:flex;flex-direction:column;gap:12px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /page-score-history -->
+
+                <!-- Page: Analytics -->
+                <div id="page-analytics" class="page-container" style="display:none;">
+                    <div class="breadcrumb">
+                        Ward 4B — ICU <span>›</span> Analytics
+                    </div>
+                    <div class="content-header">
+                        <div>
+                            <div class="content-title">Ward Analytics</div>
+                            <div class="content-subtitle">Aggregated risk and clinical insights for Ward 4B</div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-ghost" onclick="setAnalyticsRange('week', this)">
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+                                This week
+                            </button>
+                            <button class="btn btn-ghost" onclick="setAnalyticsRange('month', this)">
+                                This month
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;margin-bottom:20px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Total Admissions</div>
+                            </div>
+                            <div style="font-size:32px;font-weight:600;color:var(--navy);margin:12px 0;">18</div>
+                            <div style="font-size:12px;color:var(--text-muted);">Active patients in Ward 4B</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Avg Risk Score</div>
+                            </div>
+                            <div style="font-size:32px;font-weight:600;color:#8A5A10;margin:12px 0;">5.2</div>
+                            <div style="font-size:12px;color:var(--text-muted);">Moderate risk trend</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">High-Risk Alerts</div>
+                            </div>
+                            <div style="font-size:32px;font-weight:600;color:#9E2B2B;margin:12px 0;">3</div>
+                            <div style="font-size:12px;color:var(--text-muted);">Requiring escalation</div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Risk Distribution</div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:12px;padding:12px 0;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;">
+                                    <span style="font-size:12px;color:var(--text-muted);">Low Risk (0–3)</span>
+                                    <span style="font-family:var(--mono);font-weight:600;color:var(--success);">8 patients</span>
+                                </div>
+                                <div style="height:6px;background:var(--ice);border-radius:3px;">
+                                    <div style="width:44%;height:100%;background:var(--success);border-radius:3px;"></div>
+                                </div>
+                                <div style="display:flex;align-items:center;justify-content:space-between;">
+                                    <span style="font-size:12px;color:var(--text-muted);">Moderate Risk (4–6)</span>
+                                    <span style="font-family:var(--mono);font-weight:600;color:var(--warn);">7 patients</span>
+                                </div>
+                                <div style="height:6px;background:var(--ice);border-radius:3px;">
+                                    <div style="width:39%;height:100%;background:var(--warn);border-radius:3px;"></div>
+                                </div>
+                                <div style="display:flex;align-items:center;justify-content:space-between;">
+                                    <span style="font-size:12px;color:var(--text-muted);">High Risk (7–10)</span>
+                                    <span style="font-family:var(--mono);font-weight:600;color:var(--danger);">3 patients</span>
+                                </div>
+                                <div style="height:6px;background:var(--ice);border-radius:3px;">
+                                    <div style="width:17%;height:100%;background:var(--danger);border-radius:3px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Top Risk Factors</div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:12px;padding:8px 0;">
+                                <div style="display:flex;justify-content:space-between;font-size:12px;padding:8px;background:var(--ice);border-radius:var(--radius);border-left:3px solid #9E2B2B;">
+                                    <span>Respiratory compromise</span>
+                                    <span style="font-weight:600;color:var(--danger);">44%</span>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;font-size:12px;padding:8px;background:var(--ice);border-radius:var(--radius);border-left:3px solid #8A5A10;">
+                                    <span>Vasopressor requirement</span>
+                                    <span style="font-weight:600;color:var(--warn);">38%</span>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;font-size:12px;padding:8px;background:var(--ice);border-radius:var(--radius);border-left:3px solid #4A8FB8;">
+                                    <span>Altered mental status</span>
+                                    <span style="font-weight:600;color:var(--sky);">32%</span>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;font-size:12px;padding:8px;background:var(--ice);border-radius:var(--radius);border-left:3px solid #2A7A5E;">
+                                    <span>Renal dysfunction</span>
+                                    <span style="font-weight:600;color:var(--success);">26%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /page-analytics -->
 
             </div><!-- /content -->
 
@@ -621,6 +808,145 @@
 </div><!-- /layout -->
 
 <script>
+    // ─── Routing ─────────────────────────────────────────
+    const routes = {
+        '/risk-assessment': 'page-risk-assessment',
+        '/patient-list': 'page-patient-list',
+        '/score-history': 'page-score-history',
+        '/analytics': 'page-analytics'
+    };
+
+    function navigate(event, path) {
+        event.preventDefault();
+        window.location.hash = path;
+        renderPage(path);
+    }
+
+    function renderPage(path) {
+        // Hide all pages
+        document.querySelectorAll('.page-container').forEach(p => p.style.display = 'none');
+
+        // Update sidebar active state
+        document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+
+        // Show requested page
+        const pageId = routes[path] || 'page-risk-assessment';
+        const page = document.getElementById(pageId);
+        if (page) page.style.display = 'block';
+
+        // Mark sidebar item as active
+        const activeLink = document.querySelector(`a[href="#${path}"]`);
+        if (activeLink) activeLink.classList.add('active');
+
+        // Initialize page-specific data
+        if (path === '/patient-list') initPatientList();
+        if (path === '/score-history') initScoreHistory();
+        if (path === '/analytics') initAnalytics();
+
+        // Scroll to top
+        const contentArea = document.getElementById('app-content');
+        if (contentArea) contentArea.scrollTop = 0;
+    }
+
+    // Handle initial page load and hash changes
+    window.addEventListener('hashchange', () => {
+        const path = window.location.hash.slice(1) || '/risk-assessment';
+        renderPage(path);
+    });
+
+    // Initialize on page load
+    window.addEventListener('load', () => {
+        const path = window.location.hash.slice(1) || '/risk-assessment';
+        renderPage(path);
+    });
+
+    // ─── Patient List Functions ─────────────────────────
+    function initPatientList() {
+        const patientData = [
+            { name: 'Anon. Patient #0042', admit: '2025-03-15 08:30', age: 67, severity: 'APACHE II: 28', risk: 7.8, status: 'High' },
+            { name: 'Anon. Patient #0041', admit: '2025-03-14 14:15', age: 52, severity: 'APACHE II: 21', risk: 5.2, status: 'Moderate' },
+            { name: 'Anon. Patient #0040', admit: '2025-03-13 09:45', age: 73, severity: 'APACHE II: 35', risk: 8.1, status: 'High' },
+            { name: 'Anon. Patient #0039', admit: '2025-03-12 16:20', age: 55, severity: 'APACHE II: 18', risk: 2.4, status: 'Low' },
+            { name: 'Anon. Patient #0038', admit: '2025-03-11 11:00', age: 68, severity: 'APACHE II: 26', risk: 6.7, status: 'Moderate' },
+            { name: 'Anon. Patient #0037', admit: '2025-03-10 07:30', age: 61, severity: 'APACHE II: 22', risk: 4.3, status: 'Moderate' },
+        ];
+
+        const tbody = document.getElementById('patient-list-body');
+        tbody.innerHTML = patientData.map(p => {
+            const statusColor = p.status === 'High' ? 'var(--danger)' : p.status === 'Moderate' ? 'var(--warn)' : 'var(--success)';
+            const riskColor = p.risk > 7 ? 'var(--danger)' : p.risk > 4 ? 'var(--warn)' : 'var(--success)';
+            return `
+                <tr style="border-bottom:1px solid var(--border);height:44px;cursor:pointer;" onmouseover="this.style.background='var(--ice)'" onmouseout="this.style.background='transparent'">
+                    <td style="padding:8px 12px;font-size:12px;color:var(--text-primary);font-weight:500;">${p.name}</td>
+                    <td style="padding:8px 12px;font-size:12px;color:var(--text-muted);">${p.admit}</td>
+                    <td style="padding:8px 12px;font-size:12px;color:var(--text-muted);">${p.age} y</td>
+                    <td style="padding:8px 12px;font-size:12px;color:var(--text-muted);text-align:center;">${p.severity}</td>
+                    <td style="padding:8px 12px;font-size:12px;font-weight:600;text-align:center;color:${riskColor};">${p.risk.toFixed(1)}</td>
+                    <td style="padding:8px 12px;font-size:12px;text-align:center;"><span style="padding:4px 8px;background:var(--ice);border-radius:var(--radius-sm);color:${statusColor};font-weight:500;">${p.status}</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function sortPatients(sortBy, btn) {
+        // Update button state
+        document.querySelectorAll('.header-actions .btn-ghost').forEach(b => b.style.opacity = '1');
+        btn.style.opacity = '0.6';
+    }
+
+    function refreshPatients() {
+        initPatientList();
+    }
+
+    // ─── Score History Functions ────────────────────────
+    function initScoreHistory() {
+        const historyData = [
+            { date: '2025-03-15 14:30', sofa: 11, apache: 28, saps: 54, cumulative: 7.8 },
+            { date: '2025-03-15 10:15', sofa: 10, apache: 26, saps: 52, cumulative: 7.2 },
+            { date: '2025-03-14 22:45', sofa: 9, apache: 24, saps: 48, cumulative: 6.9 },
+            { date: '2025-03-14 14:00', sofa: 9, apache: 23, saps: 46, cumulative: 6.5 },
+            { date: '2025-03-14 08:30', sofa: 8, apache: 21, saps: 44, cumulative: 6.1 },
+        ];
+
+        const historyList = document.getElementById('history-list');
+        historyList.innerHTML = historyData.map((h, i) => {
+            const riskColor = h.cumulative > 7 ? 'var(--danger)' : h.cumulative > 4 ? 'var(--warn)' : 'var(--success)';
+            const riskLabel = h.cumulative > 7 ? 'High' : h.cumulative > 4 ? 'Moderate' : 'Low';
+            return `
+                <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">${h.date}</div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">SOFA: ${h.sofa} · APACHE II: ${h.apache} · SAPS II: ${h.saps}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="text-align:right;">
+                            <div style="font-size:11px;color:var(--text-muted);">Cumulative</div>
+                            <div style="font-size:16px;font-weight:600;color:${riskColor};font-family:var(--mono);">${h.cumulative.toFixed(1)}</div>
+                        </div>
+                        <div style="padding:6px 12px;background:var(--ice);border-radius:var(--radius-sm);color:${riskColor};font-size:11px;font-weight:600;">${riskLabel}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function setTimeRange(range, btn) {
+        document.querySelectorAll('.header-actions .btn-ghost').forEach(b => b.style.opacity = '1');
+        btn.style.opacity = '0.6';
+        initScoreHistory();
+    }
+
+    // ─── Analytics Functions ────────────────────────────
+    function initAnalytics() {
+        // Chart and data are pre-rendered; this could load dynamic data
+    }
+
+    function setAnalyticsRange(range, btn) {
+        document.querySelectorAll('.header-actions .btn-ghost').forEach(b => b.style.opacity = '1');
+        btn.style.opacity = '0.6';
+    }
+
+    // ─── App State ──────────────────────────────────────
     let mode = 'direct';
     let computedScores = { sofa: null, apache: null, saps: null };
 
@@ -783,7 +1109,7 @@ Return ONLY this JSON, no markdown, no preamble:
         if (sapsN  != null) { cum += sapsN  * 0.25; wt += 0.25; }
         const final = parseFloat((cum / wt * (wt > 0 ? 1 : 1)).toFixed(1));
 
-        const color = final <= 3 ? '#2E8B6F' : final <= 6 ? '#B07020' : '#B03030';
+        const color = final <= 3 ? '#2A7A5E' : final <= 6 ? '#8A5A10' : '#9E2B2B';
         const label = final <= 3 ? 'Low Risk' : final <= 6 ? 'Moderate Risk' : 'High Risk';
         const badgeClass = final <= 3 ? 'badge-success' : final <= 6 ? 'badge-warn' : 'badge-danger';
 
